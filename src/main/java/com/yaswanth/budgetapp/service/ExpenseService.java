@@ -7,5 +7,11 @@ public interface ExpenseService {
 
     Expense addExpense(Expense expense);
 
+    Expense getExpenseById(Long id);
+
+    void deleteExpense(Long id);
+
+    Expense updateExpense(Long id, Expense expense);
+
     List<Expense> getAllExpenses();
 }
