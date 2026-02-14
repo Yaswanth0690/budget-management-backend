@@ -1,0 +1,20 @@
+# Budget Management Backend
+
+Spring Boot backend for Budget Management Application.
+
+## Tech Stack
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- MySQL
+- Maven
+
+## Features Implemented
+- Expense CRUD (Create, Read)
+- REST API
+- Database Integration
+
+## Running the Application
+1. Configure MySQL
+2. Update application.properties
+3. Run BudgetappApplication
