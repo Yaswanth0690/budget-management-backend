@@ -1,17 +1,24 @@
 package com.yaswanth.budgetapp.service;
-
+import org.springframework.data.domain.Page;
+import com.yaswanth.budgetapp.dto.ExpenseRequest;
+import com.yaswanth.budgetapp.dto.ExpenseResponse;
 import com.yaswanth.budgetapp.model.Expense;
 import java.util.List;
 
 public interface ExpenseService {
 
-    Expense addExpense(Expense expense);
+    ExpenseResponse addExpense(ExpenseRequest request);
 
-    Expense getExpenseById(Long id);
+    ExpenseResponse getExpenseById(Long id);
+
+    ExpenseResponse updateExpense(Long id, ExpenseRequest request);
 
     void deleteExpense(Long id);
 
-    Expense updateExpense(Long id, Expense expense);
+    Page<ExpenseResponse> getAllExpenses(int page,
+                                         int size,
+                                         String sortBy,
+                                         String direction);
 
-    List<Expense> getAllExpenses();
+
 }

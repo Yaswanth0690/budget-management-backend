@@ -2,6 +2,8 @@ package com.yaswanth.budgetapp.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import jakarta.validation.constraints.*;
+
 
 @Entity
 @Table(name = "expenses")
@@ -11,11 +13,20 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
+    @Positive
     private double amount;
 
+    @NotBlank
     private String description;
 
+    @NotNull
     private LocalDate date;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
 
     public Expense() {
     }
@@ -53,4 +64,13 @@ public class Expense {
     public void setDate(LocalDate date) {
         this.date = date;
     }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
 }

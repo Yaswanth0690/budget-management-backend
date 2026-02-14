@@ -1,8 +1,13 @@
 package com.yaswanth.budgetapp.controller;
 
+import com.yaswanth.budgetapp.dto.ExpenseRequest;
+import com.yaswanth.budgetapp.dto.ExpenseResponse;
 import com.yaswanth.budgetapp.model.Expense;
 import com.yaswanth.budgetapp.service.ExpenseService;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
 
 import java.util.List;
 
@@ -17,13 +22,19 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public Expense addExpense(@RequestBody Expense expense) {
-        return service.addExpense(expense);
+    public ExpenseResponse addExpense(@Valid @RequestBody ExpenseRequest request) {
+        return service.addExpense(request);
     }
 
     @GetMapping("/{id}")
-    public Expense getExpenseById(@PathVariable Long id) {
+    public ExpenseResponse getExpenseById(@PathVariable Long id) {
         return service.getExpenseById(id);
+    }
+
+    @PutMapping("/{id}")
+    public ExpenseResponse updateExpense(@PathVariable Long id,
+                                         @Valid @RequestBody ExpenseRequest request) {
+        return service.updateExpense(id, request);
     }
 
     @DeleteMapping("/{id}")
@@ -32,13 +43,16 @@ public class ExpenseController {
         return "Expense deleted successfully";
     }
 
-    @PutMapping("/{id}")
-    public Expense updateExpense(@PathVariable Long id, @RequestBody Expense expense) {
-        return service.updateExpense(id, expense);
+    @GetMapping
+    public Page<ExpenseResponse> getAllExpenses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        return service.getAllExpenses(page, size, sortBy, direction);
     }
 
-    @GetMapping
-    public List<Expense> getAllExpenses() {
-        return service.getAllExpenses();
-    }
 }
+
+
