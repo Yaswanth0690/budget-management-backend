@@ -5,7 +5,10 @@ import com.yaswanth.budgetapp.dto.BudgetResponse;
 import com.yaswanth.budgetapp.service.BudgetService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -18,27 +21,34 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<BudgetResponse> createOrUpdateBudget(
+    public ResponseEntity<BudgetResponse> createBudget(
             @Valid @RequestBody BudgetRequest request) {
 
-        return ResponseEntity.ok(service.setBudget(request));
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.setBudget(request, email));
     }
 
     @GetMapping
-    public ResponseEntity<BudgetResponse> getBudgetByUserAndMonth(
-            @RequestParam Long userId,
-            @RequestParam String month) {
+    public ResponseEntity<List<BudgetResponse>> getBudgets() {
 
-        return ResponseEntity.ok(
-                service.getBudgetByUserAndMonth(userId, month)
-        );
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.getBudgetsByUserEmail(email));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBudget(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> deleteBudget(@PathVariable Long id) {
 
-        service.deleteBudget(id);
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        service.deleteBudget(id, email);
         return ResponseEntity.noContent().build();
     }
 }

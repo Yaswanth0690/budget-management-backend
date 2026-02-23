@@ -2,112 +2,117 @@ package com.yaswanth.budgetapp.service;
 
 import com.yaswanth.budgetapp.dto.ExpenseRequest;
 import com.yaswanth.budgetapp.dto.ExpenseResponse;
+import com.yaswanth.budgetapp.exception.BusinessException;
 import com.yaswanth.budgetapp.exception.ResourceNotFoundException;
 import com.yaswanth.budgetapp.model.Category;
 import com.yaswanth.budgetapp.model.Expense;
+import com.yaswanth.budgetapp.model.User;
 import com.yaswanth.budgetapp.repository.CategoryRepository;
 import com.yaswanth.budgetapp.repository.ExpenseRepository;
+import com.yaswanth.budgetapp.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.*;
 
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
     public ExpenseServiceImpl(ExpenseRepository expenseRepository,
-                              CategoryRepository categoryRepository) {
+                              CategoryRepository categoryRepository,
+                              UserRepository userRepository) {
         this.expenseRepository = expenseRepository;
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
-    // ================= CREATE =================
     @Override
-    public ExpenseResponse addExpense(ExpenseRequest request) {
+    public ExpenseResponse createExpense(ExpenseRequest request, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Category not found with id "
-                                + request.getCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        Expense expense = new Expense();
-        expense.setAmount(request.getAmount());
-        expense.setDescription(request.getDescription());
-        expense.setDate(request.getDate());
-        expense.setCategory(category);
+        if (!category.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("You cannot use another user's category");
+        }
 
-        Expense saved = expenseRepository.save(expense);
+        Expense expense = Expense.builder()
+                .amount(request.getAmount())
+                .description(request.getDescription())
+                .date(request.getDate())
+                .category(category)
+                .user(user)
+                .build();
 
-        return mapToResponse(saved);
+        return mapToResponse(expenseRepository.save(expense));
     }
 
-    // ================= GET BY ID =================
     @Override
-    public ExpenseResponse getExpenseById(Long id) {
+    public Page<ExpenseResponse> getExpensesByUserEmail(String email,
+                                                        Pageable pageable) {
 
-        Expense expense = expenseRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Expense not found with id " + id));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        return mapToResponse(expense);
+        return expenseRepository.findByUser(user, pageable)
+                .map(this::mapToResponse);
     }
 
-    // ================= PAGINATION + SORTING =================
     @Override
-    public Page<ExpenseResponse> getAllExpenses(int page,
-                                                int size,
-                                                String sortBy,
-                                                String direction) {
+    public ExpenseResponse updateExpense(Long id,
+                                         ExpenseRequest request,
+                                         String email) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<Expense> expensePage = expenseRepository.findAll(pageable);
-
-        return expensePage.map(this::mapToResponse);
-    }
-
-    // ================= UPDATE =================
-    @Override
-    public ExpenseResponse updateExpense(Long id, ExpenseRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Expense existing = expenseRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Expense not found with id " + id));
+                        new ResourceNotFoundException("Expense not found"));
+
+        if (!existing.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("Unauthorized access");
+        }
 
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Category not found with id "
-                                + request.getCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        if (!category.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("You cannot use another user's category");
+        }
 
         existing.setAmount(request.getAmount());
         existing.setDescription(request.getDescription());
         existing.setDate(request.getDate());
         existing.setCategory(category);
 
-        Expense updated = expenseRepository.save(existing);
-
-        return mapToResponse(updated);
+        return mapToResponse(expenseRepository.save(existing));
     }
 
-    // ================= DELETE =================
     @Override
-    public void deleteExpense(Long id) {
+    public void deleteExpense(Long id, String email) {
 
-        if (!expenseRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Expense not found with id " + id);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Expense expense = expenseRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Expense not found"));
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("Unauthorized access");
         }
 
-        expenseRepository.deleteById(id);
+        expenseRepository.delete(expense);
     }
 
-    // ================= MAPPING METHOD =================
     private ExpenseResponse mapToResponse(Expense expense) {
-
         return new ExpenseResponse(
                 expense.getId(),
                 expense.getAmount(),

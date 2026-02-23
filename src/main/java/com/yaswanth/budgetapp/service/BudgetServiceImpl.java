@@ -9,8 +9,12 @@ import com.yaswanth.budgetapp.model.User;
 import com.yaswanth.budgetapp.repository.BudgetRepository;
 import com.yaswanth.budgetapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
+@Transactional
 public class BudgetServiceImpl implements BudgetService {
 
     private final BudgetRepository budgetRepository;
@@ -23,16 +27,18 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     @Override
-    public BudgetResponse setBudget(BudgetRequest request) {
+    public BudgetResponse setBudget(BudgetRequest request, String email) {
 
-        if (budgetRepository.findByUserIdAndMonth(
-                request.userId(), request.month()).isPresent()) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Prevent duplicate month budget per user
+        if (budgetRepository
+                .findByUserIdAndMonth(user.getId(), request.month())
+                .isPresent()) {
 
             throw new BusinessException("Budget already exists for this month");
         }
-
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Budget budget = Budget.builder()
                 .amount(request.amount())
@@ -43,31 +49,36 @@ public class BudgetServiceImpl implements BudgetService {
         return mapToResponse(budgetRepository.save(budget));
     }
 
-
     @Override
-    public BudgetResponse getBudgetByUserAndMonth(Long userId, String month) {
+    @Transactional(readOnly = true)
+    public List<BudgetResponse> getBudgetsByUserEmail(String email) {
 
-        Budget budget = budgetRepository
-                .findByUserIdAndMonth(userId, month)
-                .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        return mapToResponse(budget);
+        return budgetRepository.findByUserId(user.getId())
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
-    public void deleteBudget(Long id) {
-        if (!budgetRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Budget not found");
-        }
-        budgetRepository.deleteById(id);
+    public void deleteBudget(Long id, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Budget budget = budgetRepository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
+
+        budgetRepository.delete(budget);
     }
 
     private BudgetResponse mapToResponse(Budget budget) {
         return new BudgetResponse(
                 budget.getId(),
                 budget.getAmount(),
-                budget.getMonth(),
-                budget.getUser().getId()
+                budget.getMonth()
         );
     }
 }

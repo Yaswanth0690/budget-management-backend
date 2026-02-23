@@ -1,23 +1,33 @@
 package com.yaswanth.budgetapp.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 
 @Entity
-@Table(name = "categories")
+@Table(
+        name = "categories",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"name", "user_id"}
+        )
+)
 public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
+    @Column(nullable = false)
     private String name;
 
-    public Category() {}
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    public Category(String name) {
+    public Category() {
+    }
+
+    public Category(String name, User user) {
         this.name = name;
+        this.user = user;
     }
 
     public Long getId() {
@@ -28,7 +38,15 @@ public class Category {
         return name;
     }
 
+    public User getUser() {
+        return user;
+    }
+
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

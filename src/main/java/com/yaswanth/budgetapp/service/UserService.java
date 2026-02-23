@@ -9,6 +9,8 @@ public interface UserService {
 
     UserResponse createUser(UserRequest request);
 
+    UserResponse getByEmail(String email);
+
     UserResponse getUserById(Long id);
 
     List<UserResponse> getAllUsers();

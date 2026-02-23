@@ -3,25 +3,28 @@ package com.yaswanth.budgetapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.YearMonth;
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "month"})
+)
 public class Budget {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private Double amount;
 
-    private String month; // "2026-02"
+    @Column(nullable = false)
+    private String month; // Format: "2026-02"
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

@@ -35,6 +35,15 @@ public class UserServiceImpl implements UserService {
         return mapToResponse(repository.save(user));
     }
 
+    @Override
+    public UserResponse getByEmail(String email) {
+
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return mapToResponse(user);
+    }
+
 
     @Override
     public UserResponse getUserById(Long id) {

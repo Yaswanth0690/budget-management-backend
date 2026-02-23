@@ -1,24 +1,17 @@
 package com.yaswanth.budgetapp.service;
-import org.springframework.data.domain.Page;
+
 import com.yaswanth.budgetapp.dto.ExpenseRequest;
 import com.yaswanth.budgetapp.dto.ExpenseResponse;
-import com.yaswanth.budgetapp.model.Expense;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ExpenseService {
 
-    ExpenseResponse addExpense(ExpenseRequest request);
+    ExpenseResponse createExpense(ExpenseRequest request, String email);
 
-    ExpenseResponse getExpenseById(Long id);
+    Page<ExpenseResponse> getExpensesByUserEmail(String email, Pageable pageable);
 
-    ExpenseResponse updateExpense(Long id, ExpenseRequest request);
+    ExpenseResponse updateExpense(Long id, ExpenseRequest request, String email);
 
-    void deleteExpense(Long id);
-
-    Page<ExpenseResponse> getAllExpenses(int page,
-                                         int size,
-                                         String sortBy,
-                                         String direction);
-
-
+    void deleteExpense(Long id, String email);
 }

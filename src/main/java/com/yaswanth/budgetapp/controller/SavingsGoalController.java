@@ -1,13 +1,12 @@
 package com.yaswanth.budgetapp.controller;
 
+import com.yaswanth.budgetapp.dto.AddAmountRequest;
 import com.yaswanth.budgetapp.dto.SavingsGoalRequest;
 import com.yaswanth.budgetapp.dto.SavingsGoalResponse;
-import com.yaswanth.budgetapp.dto.AddAmountRequest;
 import com.yaswanth.budgetapp.service.SavingsGoalService;
-
 import jakarta.validation.Valid;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,43 +15,53 @@ import java.util.List;
 @RequestMapping("/api/savings-goals")
 public class SavingsGoalController {
 
-    private final SavingsGoalService savingsGoalService;
+    private final SavingsGoalService service;
 
-    public SavingsGoalController(SavingsGoalService savingsGoalService) {
-        this.savingsGoalService = savingsGoalService;
+    public SavingsGoalController(SavingsGoalService service) {
+        this.service = service;
     }
 
-    // ✅ Create new savings goal
     @PostMapping
     public ResponseEntity<SavingsGoalResponse> createGoal(
             @Valid @RequestBody SavingsGoalRequest request) {
 
-        SavingsGoalResponse response =
-                savingsGoalService.createGoal(request);
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(service.createGoal(request, email));
     }
 
-    // ✅ Get all goals for a user
     @GetMapping
-    public ResponseEntity<List<SavingsGoalResponse>> getGoalsByUser(
-            @RequestParam Long userId) {
+    public ResponseEntity<List<SavingsGoalResponse>> getGoals() {
 
-        List<SavingsGoalResponse> goals =
-                savingsGoalService.getGoalsByUser(userId);
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
-        return ResponseEntity.ok(goals);
+        return ResponseEntity.ok(service.getGoalsByUserEmail(email));
     }
 
-    // ✅ Contribute amount to goal
-    @PutMapping("/{goalId}/contribute")
-    public ResponseEntity<SavingsGoalResponse> contributeToGoal(
-            @PathVariable Long goalId,
+    @PostMapping("/{id}/contribute")
+    public ResponseEntity<SavingsGoalResponse> contribute(
+            @PathVariable Long id,
             @Valid @RequestBody AddAmountRequest request) {
 
-        SavingsGoalResponse response =
-                savingsGoalService.contribute(goalId, request);
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(service.contribute(id, request, email));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteGoal(@PathVariable Long id) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        service.deleteGoal(id, email);
+        return ResponseEntity.noContent().build();
     }
 }

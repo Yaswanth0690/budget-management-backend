@@ -8,9 +8,13 @@ import java.util.List;
 
 public interface SavingsGoalService {
 
-    SavingsGoalResponse createGoal(SavingsGoalRequest request);
+    SavingsGoalResponse createGoal(SavingsGoalRequest request, String email);
 
-    List<SavingsGoalResponse> getGoalsByUser(Long userId);
+    List<SavingsGoalResponse> getGoalsByUserEmail(String email);
 
-    SavingsGoalResponse contribute(Long goalId, AddAmountRequest request);
+    SavingsGoalResponse contribute(Long goalId,
+                                   AddAmountRequest request,
+                                   String email);
+
+    void deleteGoal(Long id, String email);
 }

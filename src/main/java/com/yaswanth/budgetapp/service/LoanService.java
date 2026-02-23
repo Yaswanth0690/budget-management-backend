@@ -8,9 +8,11 @@ import java.util.List;
 
 public interface LoanService {
 
-    LoanResponse createLoan(LoanRequest request);
+    LoanResponse createLoan(LoanRequest request, String email);
 
-    List<LoanResponse> getLoansByUser(Long userId);
+    List<LoanResponse> getLoansByUserEmail(String email);
 
-    LoanResponse repay(Long loanId, LoanPaymentRequest request);
+    LoanResponse repay(Long loanId,
+                       LoanPaymentRequest request,
+                       String email);
 }

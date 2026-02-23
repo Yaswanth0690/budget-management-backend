@@ -2,17 +2,16 @@ package com.yaswanth.budgetapp.controller;
 
 import com.yaswanth.budgetapp.dto.ExpenseRequest;
 import com.yaswanth.budgetapp.dto.ExpenseResponse;
-import com.yaswanth.budgetapp.model.Expense;
 import com.yaswanth.budgetapp.service.ExpenseService;
-import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/expenses")
+@RequestMapping("/api/expenses")
 public class ExpenseController {
 
     private final ExpenseService service;
@@ -22,37 +21,48 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ExpenseResponse addExpense(@Valid @RequestBody ExpenseRequest request) {
-        return service.addExpense(request);
-    }
+    public ResponseEntity<ExpenseResponse> createExpense(
+            @Valid @RequestBody ExpenseRequest request) {
 
-    @GetMapping("/{id}")
-    public ExpenseResponse getExpenseById(@PathVariable Long id) {
-        return service.getExpenseById(id);
-    }
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
-    @PutMapping("/{id}")
-    public ExpenseResponse updateExpense(@PathVariable Long id,
-                                         @Valid @RequestBody ExpenseRequest request) {
-        return service.updateExpense(id, request);
-    }
-
-    @DeleteMapping("/{id}")
-    public String deleteExpense(@PathVariable Long id) {
-        service.deleteExpense(id);
-        return "Expense deleted successfully";
+        return ResponseEntity.ok(service.createExpense(request, email));
     }
 
     @GetMapping
-    public Page<ExpenseResponse> getAllExpenses(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
-    ) {
-        return service.getAllExpenses(page, size, sortBy, direction);
+    public ResponseEntity<Page<ExpenseResponse>> getExpenses(Pageable pageable) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(
+                service.getExpensesByUserEmail(email, pageable)
+        );
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpenseResponse> updateExpense(
+            @PathVariable Long id,
+            @Valid @RequestBody ExpenseRequest request) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.updateExpense(id, request, email));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteExpense(@PathVariable Long id) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        service.deleteExpense(id, email);
+        return ResponseEntity.ok("Expense deleted successfully");
+    }
 }
-
-

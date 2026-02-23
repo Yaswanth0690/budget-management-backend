@@ -1,8 +1,10 @@
 package com.yaswanth.budgetapp.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public record NotificationSettingsRequest(
 
-        Long userId,
-        Boolean budgetAlertEnabled,
-        Boolean loanReminderEnabled
+        @NotNull Boolean emailNotifications,
+        @NotNull Boolean budgetAlerts,
+        @NotNull Boolean goalReminders
 ) {}

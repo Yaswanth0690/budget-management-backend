@@ -5,7 +5,10 @@ import com.yaswanth.budgetapp.dto.NotificationSettingsResponse;
 
 public interface NotificationSettingsService {
 
-    NotificationSettingsResponse saveSettings(NotificationSettingsRequest request);
+    NotificationSettingsResponse updateSettings(
+            NotificationSettingsRequest request,
+            String email
+    );
 
-    NotificationSettingsResponse getByUserId(Long userId);
+    NotificationSettingsResponse getSettings(String email);
 }

@@ -3,26 +3,31 @@ package com.yaswanth.budgetapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-
-@Builder
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = "user_id")
+)
 public class NotificationSettings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Builder.Default
-    private Boolean budgetAlertEnabled = true;
+    @Column(nullable = false)
+    private boolean emailNotifications;
 
-    @Builder.Default
-    private Boolean loanReminderEnabled = true;
+    @Column(nullable = false)
+    private boolean budgetAlerts;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @Column(nullable = false)
+    private boolean goalReminders;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 }

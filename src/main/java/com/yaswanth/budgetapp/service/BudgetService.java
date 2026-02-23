@@ -3,11 +3,13 @@ package com.yaswanth.budgetapp.service;
 import com.yaswanth.budgetapp.dto.BudgetRequest;
 import com.yaswanth.budgetapp.dto.BudgetResponse;
 
+import java.util.List;
+
 public interface BudgetService {
 
-    BudgetResponse setBudget(BudgetRequest request);
+    BudgetResponse setBudget(BudgetRequest request, String email);
 
-    BudgetResponse getBudgetByUserAndMonth(Long userId, String month);
+    List<BudgetResponse> getBudgetsByUserEmail(String email);
 
-    void deleteBudget(Long id);
+    void deleteBudget(Long id, String email);
 }

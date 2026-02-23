@@ -5,6 +5,8 @@ import com.yaswanth.budgetapp.dto.UserResponse;
 import com.yaswanth.budgetapp.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,12 +28,17 @@ public class UserController {
         return ResponseEntity.ok(service.createUser(request));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(
-            @PathVariable Long id) {
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
 
-        return ResponseEntity.ok(service.getUserById(id));
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        return ResponseEntity.ok(service.getByEmail(email));
     }
+
 
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {

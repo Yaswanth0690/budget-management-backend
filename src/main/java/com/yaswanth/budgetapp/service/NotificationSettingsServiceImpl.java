@@ -8,51 +8,76 @@ import com.yaswanth.budgetapp.model.User;
 import com.yaswanth.budgetapp.repository.NotificationSettingsRepository;
 import com.yaswanth.budgetapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class NotificationSettingsServiceImpl implements NotificationSettingsService {
+@Transactional
+public class NotificationSettingsServiceImpl
+        implements NotificationSettingsService {
 
     private final NotificationSettingsRepository repository;
     private final UserRepository userRepository;
 
-    public NotificationSettingsServiceImpl(NotificationSettingsRepository repository,
-                                           UserRepository userRepository) {
+    public NotificationSettingsServiceImpl(
+            NotificationSettingsRepository repository,
+            UserRepository userRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
     }
 
     @Override
-    public NotificationSettingsResponse saveSettings(NotificationSettingsRequest request) {
+    public NotificationSettingsResponse updateSettings(
+            NotificationSettingsRequest request,
+            String email) {
 
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
 
-        NotificationSettings settings = NotificationSettings.builder()
-                .budgetAlertEnabled(request.budgetAlertEnabled())
-                .loanReminderEnabled(request.loanReminderEnabled())
-                .user(user)
-                .build();
+        NotificationSettings settings = repository
+                .findByUserId(user.getId())
+                .orElseGet(() ->
+                        NotificationSettings.builder()
+                                .user(user)
+                                .emailNotifications(true)
+                                .budgetAlerts(true)
+                                .goalReminders(true)
+                                .build()
+                );
 
-        NotificationSettings saved = repository.save(settings);
+        settings.setEmailNotifications(request.emailNotifications());
+        settings.setBudgetAlerts(request.budgetAlerts());
+        settings.setGoalReminders(request.goalReminders());
 
-        return mapToResponse(saved);
+        return mapToResponse(repository.save(settings));
     }
 
     @Override
-    public NotificationSettingsResponse getByUserId(Long userId) {
+    @Transactional(readOnly = true)
+    public NotificationSettingsResponse getSettings(String email) {
 
-        NotificationSettings settings = repository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Settings not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        NotificationSettings settings = repository
+                .findByUserId(user.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Notification settings not found"
+                        ));
 
         return mapToResponse(settings);
     }
 
-    private NotificationSettingsResponse mapToResponse(NotificationSettings settings) {
+    private NotificationSettingsResponse mapToResponse(
+            NotificationSettings settings) {
+
         return new NotificationSettingsResponse(
                 settings.getId(),
-                settings.getBudgetAlertEnabled(),
-                settings.getLoanReminderEnabled(),
-                settings.getUser().getId()
+                settings.isEmailNotifications(),
+                settings.isBudgetAlerts(),
+                settings.isGoalReminders()
         );
     }
 }

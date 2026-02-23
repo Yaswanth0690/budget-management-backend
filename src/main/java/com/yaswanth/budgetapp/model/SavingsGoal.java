@@ -9,19 +9,27 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"goal_name", "user_id"})
+        }
+)
 public class SavingsGoal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "goal_name", nullable = false)
     private String goalName;
 
+    @Column(nullable = false)
     private Double targetAmount;
 
-    private Double savedAmount = 0.0;
+    @Column(nullable = false)
+    private Double savedAmount;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

@@ -6,6 +6,7 @@ import com.yaswanth.budgetapp.dto.LoanResponse;
 import com.yaswanth.budgetapp.service.LoanService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,14 +25,21 @@ public class LoanController {
     public ResponseEntity<LoanResponse> createLoan(
             @Valid @RequestBody LoanRequest request) {
 
-        return ResponseEntity.ok(service.createLoan(request));
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.createLoan(request, email));
     }
 
     @GetMapping
-    public ResponseEntity<List<LoanResponse>> getLoansByUser(
-            @RequestParam Long userId) {
+    public ResponseEntity<List<LoanResponse>> getLoans() {
 
-        return ResponseEntity.ok(service.getLoansByUser(userId));
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.getLoansByUserEmail(email));
     }
 
     @PutMapping("/{id}/repay")
@@ -39,6 +47,10 @@ public class LoanController {
             @PathVariable Long id,
             @Valid @RequestBody LoanPaymentRequest request) {
 
-        return ResponseEntity.ok(service.repay(id, request));
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.repay(id, request, email));
     }
 }
