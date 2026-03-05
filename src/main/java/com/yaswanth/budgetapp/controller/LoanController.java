@@ -41,6 +41,17 @@ public class LoanController {
 
         return ResponseEntity.ok(service.getLoansByUserEmail(email));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLoan(@PathVariable Long id) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        service.deleteLoan(id, email);
+
+        return ResponseEntity.noContent().build();
+    }
 
     @PutMapping("/{id}/repay")
     public ResponseEntity<LoanResponse> repayLoan(

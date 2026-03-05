@@ -1,6 +1,7 @@
 package com.yaswanth.budgetapp.controller;
 
 import com.yaswanth.budgetapp.dto.AddAmountRequest;
+import com.yaswanth.budgetapp.dto.ExtendGoalRequest;
 import com.yaswanth.budgetapp.dto.SavingsGoalRequest;
 import com.yaswanth.budgetapp.dto.SavingsGoalResponse;
 import com.yaswanth.budgetapp.service.SavingsGoalService;
@@ -52,6 +53,19 @@ public class SavingsGoalController {
                 .getName();
 
         return ResponseEntity.ok(service.contribute(id, request, email));
+    }
+
+    // 🔥 The new endpoint to extend the goal
+    @PutMapping("/{id}")
+    public ResponseEntity<SavingsGoalResponse> extendGoal(
+            @PathVariable Long id,
+            @Valid @RequestBody ExtendGoalRequest request) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(service.extendGoal(id, request, email));
     }
 
     @DeleteMapping("/{id}")

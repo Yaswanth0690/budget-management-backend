@@ -9,9 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "month"})
-)
 public class Budget {
 
     @Id
@@ -22,9 +19,12 @@ public class Budget {
     private Double amount;
 
     @Column(nullable = false)
-    private String month; // Format: "2026-02"
+    private Integer month;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @Column(nullable = false)
+    private Integer year;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

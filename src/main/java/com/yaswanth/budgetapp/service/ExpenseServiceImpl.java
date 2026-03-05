@@ -1,5 +1,6 @@
 package com.yaswanth.budgetapp.service;
 
+import com.yaswanth.budgetapp.dto.CategoryExpenseSummary;
 import com.yaswanth.budgetapp.dto.ExpenseRequest;
 import com.yaswanth.budgetapp.dto.ExpenseResponse;
 import com.yaswanth.budgetapp.exception.BusinessException;
@@ -13,6 +14,8 @@ import com.yaswanth.budgetapp.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
@@ -62,6 +65,15 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         return expenseRepository.findByUser(user, pageable)
                 .map(this::mapToResponse);
+    }
+
+    @Override
+    public List<CategoryExpenseSummary> getCategoryWiseSummary(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return expenseRepository.getCategoryWiseSummary(user);
     }
 
     @Override

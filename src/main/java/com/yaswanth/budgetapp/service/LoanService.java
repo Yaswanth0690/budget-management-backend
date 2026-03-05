@@ -15,4 +15,6 @@ public interface LoanService {
     LoanResponse repay(Long loanId,
                        LoanPaymentRequest request,
                        String email);
+
+    void deleteLoan(Long loanId, String email);
 }

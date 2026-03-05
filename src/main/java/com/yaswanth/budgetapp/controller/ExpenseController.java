@@ -1,5 +1,6 @@
 package com.yaswanth.budgetapp.controller;
 
+import com.yaswanth.budgetapp.dto.CategoryExpenseSummary;
 import com.yaswanth.budgetapp.dto.ExpenseRequest;
 import com.yaswanth.budgetapp.dto.ExpenseResponse;
 import com.yaswanth.budgetapp.service.ExpenseService;
@@ -9,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -55,14 +58,27 @@ public class ExpenseController {
         return ResponseEntity.ok(service.updateExpense(id, request, email));
     }
 
+    @GetMapping("/summary/category")
+    public ResponseEntity<List<CategoryExpenseSummary>> getCategorySummary() {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return ResponseEntity.ok(
+                service.getCategoryWiseSummary(email)
+        );
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteExpense(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
 
         String email = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
 
         service.deleteExpense(id, email);
-        return ResponseEntity.ok("Expense deleted successfully");
+
+        return ResponseEntity.noContent().build();
     }
 }

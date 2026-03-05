@@ -16,13 +16,16 @@ public class Loan {
     private Long id;
 
     @Column(nullable = false)
-    private Double totalAmount;
+    private String loanName;
 
     @Column(nullable = false)
-    private Double remainingAmount;
+    private Double principalAmount;
 
     @Column(nullable = false)
     private Double interestRate;
+
+    @Column(nullable = false)
+    private Double paidAmount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

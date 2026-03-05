@@ -1,6 +1,7 @@
 package com.yaswanth.budgetapp.service;
 
 import com.yaswanth.budgetapp.dto.AddAmountRequest;
+import com.yaswanth.budgetapp.dto.ExtendGoalRequest;
 import com.yaswanth.budgetapp.dto.SavingsGoalRequest;
 import com.yaswanth.budgetapp.dto.SavingsGoalResponse;
 import com.yaswanth.budgetapp.exception.BusinessException;
@@ -31,7 +32,6 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Prevent duplicate goal names per user
         savingsGoalRepository.findByGoalNameAndUser(request.goalName(), user)
                 .ifPresent(g -> {
                     throw new BusinessException("Goal with this name already exists");
@@ -70,7 +70,6 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
         SavingsGoal goal = savingsGoalRepository.findById(goalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Savings goal not found"));
 
-        // Ownership validation
         if (!goal.getUser().getId().equals(user.getId())) {
             throw new BusinessException("Unauthorized access");
         }
@@ -82,6 +81,28 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
         }
 
         goal.setSavedAmount(newAmount);
+
+        return mapToResponse(savingsGoalRepository.save(goal));
+    }
+
+    @Override
+    public SavingsGoalResponse extendGoal(Long goalId, ExtendGoalRequest request, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        SavingsGoal goal = savingsGoalRepository.findById(goalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Savings goal not found"));
+
+        if (!goal.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("Unauthorized access");
+        }
+
+        if (request.targetAmount() < goal.getSavedAmount()) {
+            throw new BusinessException("New target amount cannot be less than the already saved amount");
+        }
+
+        goal.setTargetAmount(request.targetAmount());
 
         return mapToResponse(savingsGoalRepository.save(goal));
     }

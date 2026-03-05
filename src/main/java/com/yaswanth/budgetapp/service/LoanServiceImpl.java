@@ -32,9 +32,10 @@ public class LoanServiceImpl implements LoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Loan loan = Loan.builder()
-                .totalAmount(request.totalAmount())
-                .remainingAmount(request.totalAmount())
+                .loanName(request.loanName())
+                .principalAmount(request.principalAmount())
                 .interestRate(request.interestRate())
+                .paidAmount(0.0)
                 .user(user)
                 .build();
 
@@ -61,29 +62,54 @@ public class LoanServiceImpl implements LoanService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // 🔐 SECURE QUERY (prevents accessing other users' loans)
         Loan loan = repository.findByIdAndUser(loanId, user)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Loan not found"));
 
-        if (request.amount() > loan.getRemainingAmount()) {
+        double totalAmount = calculateTotal(loan);
+        double remainingAmount = totalAmount - loan.getPaidAmount();
+
+        if (request.amount() > remainingAmount) {
             throw new BusinessException("Repayment exceeds remaining loan amount");
         }
 
-        double newRemaining = loan.getRemainingAmount() - request.amount();
-
-        loan.setRemainingAmount(newRemaining);
+        loan.setPaidAmount(loan.getPaidAmount() + request.amount());
 
         return mapToResponse(repository.save(loan));
     }
 
     private LoanResponse mapToResponse(Loan loan) {
+
+        double totalAmount = calculateTotal(loan);
+        double remainingAmount = totalAmount - loan.getPaidAmount();
+
         return new LoanResponse(
                 loan.getId(),
-                loan.getTotalAmount(),
-                loan.getRemainingAmount(),
+                loan.getLoanName(),
+                loan.getPrincipalAmount(),
                 loan.getInterestRate(),
+                totalAmount,
+                loan.getPaidAmount(),
+                remainingAmount,
                 loan.getUser().getId()
         );
+    }
+
+    @Override
+    public void deleteLoan(Long loanId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Loan loan = repository.findByIdAndUser(loanId, user)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Loan not found"));
+
+        repository.delete(loan);
+    }
+
+    private double calculateTotal(Loan loan) {
+        return loan.getPrincipalAmount()
+                + (loan.getPrincipalAmount() * loan.getInterestRate() / 100);
     }
 }

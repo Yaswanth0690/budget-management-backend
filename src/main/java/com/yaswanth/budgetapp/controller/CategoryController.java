@@ -1,10 +1,7 @@
 package com.yaswanth.budgetapp.controller;
 
-import com.yaswanth.budgetapp.exception.BusinessException;
-import com.yaswanth.budgetapp.model.Category;
-import com.yaswanth.budgetapp.model.User;
-import com.yaswanth.budgetapp.repository.CategoryRepository;
-import com.yaswanth.budgetapp.repository.UserRepository;
+import com.yaswanth.budgetapp.dto.CategoryResponse;
+import com.yaswanth.budgetapp.service.CategoryService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,41 +11,22 @@ import java.util.List;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
+    private final CategoryService categoryService;
 
-    public CategoryController(CategoryRepository categoryRepository,
-                              UserRepository userRepository) {
-        this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
-    }
-
-    @PostMapping
-    public Category createCategory(@RequestBody Category category,
-                                   Authentication authentication) {
-
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("User not found"));
-
-        if (categoryRepository.existsByNameAndUser(category.getName(), user)) {
-            throw new BusinessException("Category already exists");
-        }
-
-        category.setUser(user);
-
-        return categoryRepository.save(category);
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
     }
 
     @GetMapping
-    public List<Category> getAllCategories(Authentication authentication) {
-
+    public List<CategoryResponse> getAllCategories(Authentication authentication) {
         String email = authentication.getName();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("User not found"));
-
-        return categoryRepository.findByUser(user);
+        return categoryService.getCategories(email)
+                .stream()
+                .map(cat -> new CategoryResponse(
+                        cat.getId(),
+                        cat.getName()
+                ))
+                .toList();
     }
 }
